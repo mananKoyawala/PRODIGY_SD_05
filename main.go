@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly"
 )
@@ -20,15 +23,15 @@ type Product struct {
 var products []Product
 
 func main() {
+	timeStart := time.Now()
 	scrapper()
-
 	for _, product := range products {
 		fmt.Printf("Name : %s \nImage : %s \nPrice : %s \nRating : %s \nTotal Rating : %s\n\n", product.Name, product.ImgURL, product.Price, product.Rating, product.TotalRating)
 	}
+	fmt.Println(time.Since(timeStart))
 }
 
 func scrapeURL(baseURL string) {
-
 	var name, image, price, rating, total_rating string
 
 	c := colly.NewCollector(colly.AllowedDomains("www.amazon.in"), colly.AllowURLRevisit(),
@@ -50,7 +53,7 @@ func scrapeURL(baseURL string) {
 		image = Clean(imageLink)
 	})
 
-	//  title
+	// * title
 	c.OnHTML("h1#title span#productTitle", func(e *colly.HTMLElement) {
 		name = clearProductName(e.Text)
 	})
@@ -89,17 +92,17 @@ func scrapeURL(baseURL string) {
 
 func scrapper() {
 
-	// scanner := bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 
-	// fmt.Println("Enter how many products you want to scrap")
-	// scanner.Scan()
-	// num, err := strconv.Atoi(scanner.Text())
-	// if err != nil || num <= 0 {
-	// 	fmt.Println("please positive integer product numbers")
-	// 	os.Exit(0)
-	// }
+	fmt.Println("Enter how many products you want to scrap")
+	scanner.Scan()
+	query := scanner.Text()
+	if query == "" {
+		fmt.Println("Please enter something...")
+		os.Exit(0)
+	}
 
-	baseURL := "https://www.amazon.in/s?k=home+appliances"
+	baseURL := "https://www.amazon.in/s?k=" + prepareQuery(query)
 
 	c := colly.NewCollector(colly.AllowedDomains("www.amazon.in"))
 
@@ -116,7 +119,6 @@ func scrapper() {
 
 	c.OnHTML(".s-product-image-container a.a-link-normal", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
-		// fmt.Printf("%s\n", link)
 		productURLs = append(productURLs, "https://www.amazon.in"+link)
 	})
 
@@ -128,14 +130,9 @@ func scrapper() {
 
 	c.Visit(baseURL)
 
-	// for _, productURL := range productURLs {
-	// 	scrapeURL(productURL)
-	// }
-
-	// for i := 0; i < num; i++ {
-	// 	scrapeURL(productURLs[i])
-	// }
-	fmt.Println(len(productURLs))
+	for _, productURL := range productURLs {
+		scrapeURL(productURL)
+	}
 }
 
 func cleanComma(price string) string {
@@ -152,4 +149,8 @@ func clearProductName(name string) string {
 
 func Clean(d string) string {
 	return strings.TrimSpace(d)
+}
+
+func prepareQuery(q string) string {
+	return strings.ReplaceAll(q, " ", "+")
 }
