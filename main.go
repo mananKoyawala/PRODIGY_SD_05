@@ -89,6 +89,16 @@ func scrapeURL(baseURL string) {
 
 func scrapper() {
 
+	// scanner := bufio.NewScanner(os.Stdin)
+
+	// fmt.Println("Enter how many products you want to scrap")
+	// scanner.Scan()
+	// num, err := strconv.Atoi(scanner.Text())
+	// if err != nil || num <= 0 {
+	// 	fmt.Println("please positive integer product numbers")
+	// 	os.Exit(0)
+	// }
+
 	baseURL := "https://www.amazon.in/s?k=home+appliances"
 
 	c := colly.NewCollector(colly.AllowedDomains("www.amazon.in"))
@@ -122,9 +132,10 @@ func scrapper() {
 	// 	scrapeURL(productURL)
 	// }
 
-	for i := 0; i < 2; i++ {
-		scrapeURL(productURLs[i])
-	}
+	// for i := 0; i < num; i++ {
+	// 	scrapeURL(productURLs[i])
+	// }
+	fmt.Println(len(productURLs))
 }
 
 func cleanComma(price string) string {
