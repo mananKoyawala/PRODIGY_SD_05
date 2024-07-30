@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
-	"math/rand"
+	"log"
+	"math/rand/v2"
 	"os"
 	"strings"
 	"sync"
@@ -28,13 +30,10 @@ type Product struct {
 var products []Product
 
 func main() {
-	timeStart := time.Now()
 	scrapper()
 	wg.Wait()
-	for _, product := range products {
-		fmt.Printf("Name : %s \nImage : %s \nPrice : %s \nRating : %s \nTotal Rating : %s\n\n", product.Name, product.ImgURL, product.Price, product.Rating, product.TotalRating)
-	}
-	fmt.Println(time.Since(timeStart))
+	writeDataInCSV()
+	fmt.Println("Your product's details are in output/products.csv file.")
 }
 
 func scrapeURL(baseURL string) {
@@ -46,6 +45,7 @@ func scrapeURL(baseURL string) {
 
 	c.OnRequest(func(r *colly.Request) {
 		r.Headers.Set("Accept-Language", "en-US;q=0.9")
+		r.Headers.Set("User-Agent", randomUserAgent())
 	})
 
 	c.OnError(func(r *colly.Response, e error) {
@@ -163,10 +163,6 @@ func Clean(d string) string {
 	return strings.TrimSpace(d)
 }
 
-func prepareQuery(q string) string {
-	return strings.ReplaceAll(q, " ", "+")
-}
-
 var userAgents = []string{
 	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36",
 	"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36",
@@ -215,7 +211,30 @@ var userAgents = []string{
 }
 
 func randomUserAgent() string {
-	rand.Seed(time.Now().Unix())
-	randNum := rand.Int() % len(userAgents)
-	return userAgents[randNum]
+	// rand.Seed(time.Now().Unix())
+	// randNum := rand.Int() % len(userAgents)
+	// return userAgents[randNum]
+	return userAgents[rand.IntN(len(userAgents))]
+}
+
+func writeDataInCSV() {
+	file, err := os.Create("output/products.csv")
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+	defer file.Close()
+
+	w := csv.NewWriter(file)
+	defer w.Flush()
+
+	// Write all the data
+	var allProductData [][]string
+	allProductData = append(allProductData, []string{"Product Name", "Product Price", "Product Rating", "Product Total Ratings", "Product Image"})
+	for _, product := range products {
+		row := []string{product.Name, product.Price, product.Rating, product.TotalRating, product.ImgURL}
+		allProductData = append(allProductData, row)
+	}
+
+	w.WriteAll(allProductData)
 }
