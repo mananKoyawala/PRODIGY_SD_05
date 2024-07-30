@@ -95,7 +95,7 @@ func scrapeURL(baseURL string) {
 			products = append(products, product)
 		}
 		mutex.Unlock()
-		fmt.Printf("Scrapping of %dth Link completed\n", i)
+		fmt.Printf("Scrapping of %d Link completed\n", i)
 		i++
 	})
 
